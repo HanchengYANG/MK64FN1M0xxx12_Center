@@ -44,8 +44,12 @@ PinsProfile:
 #include "pin_mux.h"
 
 
-#define PIN16_IDX                       16u   /*!< Pin number for pin 16 in a port */
 
+#define PCR_ODE_ENABLED               0x01u   /*!< Open Drain Enable: Open drain output is enabled on the corresponding pin, if the pin is configured as a digital output. */
+#define PCR_PE_ENABLED                0x01u   /*!< Pull Enable: Internal pullup or pulldown resistor is enabled on the corresponding pin, if the pin is configured as a digital input. */
+#define PCR_PS_UP                     0x01u   /*!< Pull Select: Internal pullup resistor is enabled on the corresponding pin, if the corresponding PE field is set. */
+#define PIN10_IDX                       10u   /*!< Pin number for pin 10 in a port */
+#define PIN16_IDX                       16u   /*!< Pin number for pin 16 in a port */
 #define PIN17_IDX                       17u   /*!< Pin number for pin 17 in a port */
 
 #define SOPT5_UART0TXSRC_UART_TX      0x00u   /*!< UART 0 transmit data source select: UART0_TX pin */
@@ -85,6 +89,50 @@ void BOARD_InitPins(void) {
     (~(SIM_SOPT5_UART0TXSRC_MASK)))                          /* Mask bits to zero which are setting */
       | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX)       /* UART 0 transmit data source select: UART0_TX pin */
     );
+
+  PORT_SetPinMux(PORTB, PIN10_IDX, kPORT_MuxAsGpio);         /* PORTB10 (pin 58) is configured as PTB10 */
+  PORTB->PCR[10] = ((PORTB->PCR[10] &
+    (~(PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_ODE_MASK | PORT_PCR_ISF_MASK))) /* Mask bits to zero which are setting */
+      | PORT_PCR_PS(PCR_PS_UP)                               /* Pull Select: Internal pullup resistor is enabled on the corresponding pin, if the corresponding PE field is set. */
+      | PORT_PCR_PE(PCR_PE_ENABLED)                          /* Pull Enable: Internal pullup or pulldown resistor is enabled on the corresponding pin, if the pin is configured as a digital input. */
+      | PORT_PCR_ODE(PCR_ODE_ENABLED)                        /* Open Drain Enable: Open drain output is enabled on the corresponding pin, if the pin is configured as a digital output. */
+    );
+}
+
+
+#define PIN4_IDX                         4u   /*!< Pin number for pin 4 in a port */
+#define PIN6_IDX                         6u   /*!< Pin number for pin 6 in a port */
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : BOARD_InitButtons
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ *END**************************************************************************/
+void BOARD_InitButtons(void) {
+  CLOCK_EnableClock(kCLOCK_PortA);                           /* Port A Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
+
+  const port_pin_config_t porta4_pin38_config = {
+    kPORT_PullDisable,                                       /* Internal pull-up/down resistor is disabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainDisable,                                  /* Open drain is disabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAsGpio,                                         /* Pin is configured as PTA4 */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTA, PIN4_IDX, &porta4_pin38_config);  /* PORTA4 (pin 38) is configured as PTA4 */
+  const port_pin_config_t portc6_pin78_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainDisable,                                  /* Open drain is disabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAsGpio,                                         /* Pin is configured as PTC6 */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTC, PIN6_IDX, &portc6_pin78_config);  /* PORTC6 (pin 78) is configured as PTC6 */
 }
 
 /*******************************************************************************

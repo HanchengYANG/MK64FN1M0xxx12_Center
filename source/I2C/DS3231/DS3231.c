@@ -70,7 +70,7 @@ static void DS_ApplyConfig(DS_DataStruct* configPtr) {
 static bool DS_IsBusy() {
 	static uint8_t CtrlStat;
 	I2C_Read(DS3231_ADDR, DS_CTRL_STAT, &CtrlStat, 1U);
-	return (CtrlStat & 0x04 == 0x04);
+	return ((CtrlStat & 0x04) == 0x04);
 }
 
 /*********      Public function implementation    *********/

@@ -5,8 +5,13 @@
  *      Author: hanch
  */
 
-#include "Nixie.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #include "I2C/MCP23016/MCP23016.h"
+#include "I2C/DS3231/DS3231.h"
+#include "fsl_debug_console.h"
+#include "Nixie.h"
+#include "Misc/Misc.h"
 
 /*********             Internal macro             *********/
 
@@ -32,6 +37,8 @@ typedef enum {
 static uint8_t Nixie_NumberToMux[10] = {
 NIXIE_0, NIXIE_1, NIXIE_2, NIXIE_3, NIXIE_4,
 NIXIE_5, NIXIE_6, NIXIE_7, NIXIE_8, NIXIE_9 };
+
+static bool DsRtc_UartOutputEnable;
 
 /*********      Internal function declaration     *********/
 
@@ -66,4 +73,38 @@ void Nixie_SetTime(uint8_t h, uint8_t m, uint8_t s) {
   Nixie_SetNumber(NixiePair0, h);
   Nixie_SetNumber(NixiePair1, m);
   Nixie_SetNumber(NixiePair2, s);
+}
+
+void DsRtc_SetUartOutputEnable(bool en) {
+	if(en) {
+		PRINTF("printf time date to UART\r\n");
+	}
+	DsRtc_UartOutputEnable = en;
+}
+
+void DsRtc_Task(void *pvParameters) {
+	const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000UL );
+	static uint8_t month[12][4] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	static uint8_t day[7][4] =
+			{ "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	DS_DataStruct dsData;
+	TickType_t previous = xTaskGetTickCount();
+	DsRtc_UartOutputEnable = true;
+	float temperature = 0.0;
+	Misc_InitButtonInt();
+	Nixie_Init();
+	vTaskDelay(xDelay1000ms);
+	PRINTF("\r\n");
+	while(1) {
+		vTaskDelayUntil(&previous, xDelay1000ms);
+		DS_GetDateTime(&dsData);
+		DS_GetTemp(&temperature);
+		Nixie_SetTime(dsData.hour, dsData.min, dsData.sec);
+		if(DsRtc_UartOutputEnable) {
+			PRINTF("%02d:%02d:%02d, %s, %s %d, %d\ttemperature : %d C\r", dsData.hour, dsData.min,
+					dsData.sec, day[dsData.day - 1], month[dsData.month - 1], dsData.date,
+					dsData.year, (uint8_t)temperature);
+		}
+	}
 }

@@ -42,10 +42,10 @@
 
 /* TODO: insert other include files here. */
 #include "I2C/DS3231/DS3231.h"
+#include "App/NixieClockShell.h"
+#include "App/Nixie.h"
 /* TODO: insert other definitions and declarations here. */
-void UartListenTask(void *pvParameters);
 
-void DsRtcCommTask(void *pvParameters);
 /*
  * @brief   Application entry point.
  */
@@ -53,41 +53,14 @@ int main(void) {
 
   	/* Init board hardware. */
     BOARD_InitBootPins();
+    BOARD_InitButtons();
     BOARD_InitBootClocks();
   	/* Init FSL debug console. */
     BOARD_InitDebugConsole();
 	DS_Init();
-    printf("Hardware initialization complete, start task init.\r\n");
-    xTaskCreate(UartListenTask, "Uart listen", 1000, NULL, 33U, NULL);
-    xTaskCreate(DsRtcCommTask, "Ds Rtc", 1000, NULL, 33U, NULL);
-
+	xTaskCreate(NixieShell_ListnerTask, "Shell Listner", 300, NULL, 35U, NULL);
+    xTaskCreate(DsRtc_Task, "Ds Rtc", 300, NULL, 33U, NULL);
+    xTaskCreate(NixieShell_Task, "Shell Executer", 300, NULL, 34U, NULL);
     vTaskStartScheduler();
     return 0 ;
-}
-
-void UartListenTask(void *pvParameters) {
-	const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000UL );
-	printf("Uart listening...\r\n");
-	while(1) {
-		vTaskDelay(xDelay1000ms);
-	}
-}
-
-void DsRtcCommTask(void *pvParameters) {
-	const TickType_t xDelay1000ms = pdMS_TO_TICKS( 1000UL );
-	static uint8_t month[12][4] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	static uint8_t day[7][4] =
-			{ "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-	DS_DataStruct dsData;
-	TickType_t previous = xTaskGetTickCount();
-	float temperature = 0.0;
-	while(1) {
-		vTaskDelayUntil(&previous, xDelay1000ms);
-		DS_GetDateTime(&dsData);
-		DS_GetTemp(&temperature);
-		printf("%02d:%02d:%02d, %s, %s %d, %d\ttemperature : %d C\r", dsData.hour, dsData.min,
-				dsData.sec, day[dsData.day - 1], month[dsData.month - 1], dsData.date,
-				dsData.year, (uint8_t)temperature);
-	}
 }

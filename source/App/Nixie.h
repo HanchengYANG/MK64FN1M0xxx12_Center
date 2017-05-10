@@ -22,4 +22,8 @@ void Nixie_Init();
 
 void Nixie_SetTime(uint8_t h, uint8_t m, uint8_t s);
 
+void DsRtc_SetUartOutputEnable(bool en);
+
+void DsRtc_Task(void *pvParameters);
+
 #endif /* APP_NIXIE_H_ */

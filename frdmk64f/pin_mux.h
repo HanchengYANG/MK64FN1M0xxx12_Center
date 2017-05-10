@@ -70,6 +70,8 @@ void BOARD_InitPins(void);
  */
 void BOARD_InitBootPins(void);
 
+void BOARD_InitButtons(void);
+
 #if defined(__cplusplus)
 }
 #endif
