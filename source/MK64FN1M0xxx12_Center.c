@@ -49,9 +49,13 @@
 /*
  * @brief   Application entry point.
  */
+
+void StartupDelay(void);
+
 int main(void) {
 
   	/* Init board hardware. */
+	StartupDelay();
     BOARD_InitBootPins();
     BOARD_InitButtons();
     BOARD_InitBootClocks();
@@ -63,4 +67,11 @@ int main(void) {
     xTaskCreate(NixieShell_Task, "Shell Executer", 300, NULL, 34U, NULL);
     vTaskStartScheduler();
     return 0 ;
+}
+
+void StartupDelay(void){
+    uint32_t i = 0;
+    for (i = 0; i < 1000000; i++){
+        __NOP();
+    }
 }
