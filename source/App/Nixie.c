@@ -96,6 +96,16 @@ void DsRtc_Task(void *pvParameters) {
 	Nixie_Init();
 	vTaskDelay(xDelay1000ms);
 	PRINTF("\r\n");
+	DS_DataStruct data = {
+			.sec=00,
+			.min=30,
+			.hour=12,
+			.day=5,
+			.date=26,
+			.month=7,
+			.year=2019
+	};
+	//DS_Set(0xFF, &data); //used to configure the time!
 	while(1) {
 		vTaskDelayUntil(&previous, xDelay1000ms);
 		DS_GetDateTime(&dsData);
